@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Color Detector</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --accent-color: #4fc3f7;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+        }
+
+        .upload-section {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--accent-color);
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            background-color: rgba(79, 195, 247, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .results-section {
+            display: none;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 400px;
+            margin-bottom: 2rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .color-results {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .color-card {
+            width: 120px;
+            height: 150px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .color-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .color-swatch {
+            height: 100px;
+            width: 100%;
+        }
+
+        .color-info {
+            padding: 0.5rem;
+            text-align: center;
+            background-color: white;
+        }
+
+        .color-hex {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+
+        .color-rgb {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .color-card {
+                width: 100px;
+                height: 130px;
+            }
+
+            .color-swatch {
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Image Color Detector</h1>
+            <p class="subtitle">Upload an image to extract its dominant colors</p>
+        </header>
+
+        <section class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <p class="upload-text">Drag & drop your image here or click to browse</p>
+                <button class="btn">Select Image</button>
+                <input type="file" id="fileInput" accept="image/*">
+            </div>
+        </section>
+
+        <section class="results-section" id="resultsSection">
+            <h2>Detected Colors</h2>
+            <img id="imagePreview" class="image-preview" alt="Preview">
+            <div class="color-results" id="colorResults"></div>
+        </section>
+
+        <footer>
+            <p>© 2023 Image Color Detector | All images are processed in your browser</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const resultsSection = document.getElementById('resultsSection');
+            const imagePreview = document.getElementById('imagePreview');
+            const colorResults = document.getElementById('colorResults');
+
+            // Handle click on upload area
+            uploadArea.addEventListener('click', function() {
+                fileInput.click();
+            });
+
+            // Handle drag and drop
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.style.backgroundColor = 'rgba(79, 195, 247, 0.2)';
+            });
+
+            uploadArea.addEventListener('dragleave', function() {
+                uploadArea.style.backgroundColor = '';
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.style.backgroundColor = '';
+                
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    handleFileUpload(e.dataTransfer.files[0]);
+                }
+            });
+
+            // Handle file selection
+            fileInput.addEventListener('change', function() {
+                if (fileInput.files.length) {
+                    handleFileUpload(fileInput.files[0]);
+                }
+            });
+
+            function handleFileUpload(file) {
+                if (!file.type.match('image.*')) {
+                    alert('Please select an image file.');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    resultsSection.style.display = 'block';
+                    
+                    // Process the image for colors
+                    processImageForColors(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+
+            function processImageForColors(imageSrc) {
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.src = imageSrc;
+                
+                img.onload = function() {
+                    // Create a canvas to analyze the image
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0, img.width, img.height);
+                    
+                    // Get image data
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                    
+                    // Extract dominant colors (simplified algorithm)
+                    const colorMap = {};
+                    const step = 50; // Sample every 50th pixel for performance
+                    
+                    for (let i = 0; i < imageData.length; i += 4 * step) {
+                        const r = imageData[i];
+                        const g = imageData[i + 1];
+                        const b = imageData[i + 2];
+                        const rgb = `${r},${g},${b}`;
+                        
+                        if (!colorMap[rgb]) {
+                            colorMap[rgb] = { r, g, b, count: 0 };
+                        }
+                        colorMap[rgb].count++;
+                    }
+                    
+                    // Convert to array and sort by frequency
+                    const colors = Object.values(colorMap);
+                    colors.sort((a, b) => b.count - a.count);
+                    
+                    // Display top 10 colors
+                    displayColors(colors.slice(0, 10));
+                };
+            }
+
+            function displayColors(colors) {
+                colorResults.innerHTML = '';
+                
+                colors.forEach(color => {
+                    const hex = rgbToHex(color.r, color.g, color.b);
+                    const rgb = `${color.r}, ${color.g}, ${color.b}`;
+                    
+                    const colorCard = document.createElement('div');
+                    colorCard.className = 'color-card';
+                    colorCard.innerHTML = `
+                        <div class="color-swatch" style="background-color: rgb(${rgb})"></div>
+                        <div class="color-info">
+                            <div class="color-hex">${hex}</div>
+                            <div class="color-rgb">${rgb}</div>
+                        </div>
+                    `;
+                    
+                    // Add click to copy functionality
+                    colorCard.addEventListener('click', function() {
+                        navigator.clipboard.writeText(hex);
+                        const hexElement = colorCard.querySelector('.color-hex');
+                        const originalText = hexElement.textContent;
+                        hexElement.textContent = 'Copied!';
+                        setTimeout(() => {
+                            hexElement.textContent = originalText;
+                        }, 1000);
+                    });
+                    
+                    colorResults.appendChild(colorCard);
+                });
+            }
+
+            function rgbToHex(r, g, b) {
+                return '#' + [r, g, b].map(x => {
+                    const hex = x.toString(16);
+                    return hex.length === 1 ? '0' + hex : hex;
+                }).join('');
+            }
+        });
+    </script>
+</body>
+</html>
